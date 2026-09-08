@@ -7,6 +7,7 @@ from rasterio.mask import mask
 from rasterio.warp import reproject, Resampling, transform_geom
 import pandas as pd
 from shapely.geometry import box, mapping
+from PIL import Image
 
 # ==========================================
 # 1. CONFIGURARE & AUTENTIFICARE
@@ -248,3 +249,25 @@ with rasterio.open("dNBR_classified.tif", "w", **profile) as dst:
 
 print("\nProcesare API finalizată cu succes!")
 print(df.to_string(index=False))
+
+# ==========================================
+# 4. EXPORT IMAGINE PNG COLORATĂ
+# ==========================================
+png_output = "harta_severitate_finala.png"
+
+# Culori RGBA pentru codurile de clasă (0 la 6)
+palette = np.array([
+    [0, 0, 0, 0],          # 0: NoData (Transparent)
+    [0, 100, 0, 255],      # 1: High Regrowth (Verde închis)
+    [124, 252, 0, 255],    # 2: Unburned (Verde deschis)
+    [255, 255, 0, 255],    # 3: Low Severity (Galben)
+    [255, 165, 0, 255],    # 4: Mod-Low Severity (Portocaliu)
+    [255, 69, 0, 255],     # 5: Mod-High Severity (Roșu-Portocaliu)
+    [128, 0, 128, 255]     # 6: High Severity (Violet)
+], dtype=np.uint8)
+
+rgba_image = palette[dnbr_class]
+img = Image.fromarray(rgba_image, mode='RGBA')
+img.save(png_output)
+
+print(f"\nImaginea PNG a fost salvată în: {os.path.abspath(png_output)}")
